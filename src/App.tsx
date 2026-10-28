@@ -487,6 +487,47 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
+  const handleApplyVoiceStyle = (style: 'natural' | 'narration' | 'announcement' | 'speed') => {
+    switch (style) {
+      case 'natural':
+        setSettings(prev => ({
+          ...prev,
+          voiceStyle: 'natural',
+          rate: 1.02,
+          pitch: 1.0,
+          pauseDurationMs: 280,
+        }));
+        break;
+      case 'narration':
+        setSettings(prev => ({
+          ...prev,
+          voiceStyle: 'narration',
+          rate: 0.92,
+          pitch: 0.96,
+          pauseDurationMs: 420,
+        }));
+        break;
+      case 'announcement':
+        setSettings(prev => ({
+          ...prev,
+          voiceStyle: 'announcement',
+          rate: 1.08,
+          pitch: 1.04,
+          pauseDurationMs: 200,
+        }));
+        break;
+      case 'speed':
+        setSettings(prev => ({
+          ...prev,
+          voiceStyle: 'speed',
+          rate: 1.35,
+          pitch: 1.0,
+          pauseDurationMs: 120,
+        }));
+        break;
+    }
+  };
+
   const handlePlayStopToggle = () => {
     if (isPlaying && !isPaused) {
       handlePause();
@@ -503,6 +544,8 @@ export default function App() {
       <Header
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
+        voiceStyle={settings.voiceStyle}
+        onChangeVoiceStyle={handleApplyVoiceStyle}
         theme={theme}
         onToggleTheme={toggleTheme}
         fontSize={fontSize}
