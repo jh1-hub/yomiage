@@ -9,7 +9,7 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': import.meta.dirname ? path.resolve(import.meta.dirname, '.') : path.resolve(__dirname, '.'),
+        '@': path.resolve('.'),
       },
     },
     server: {

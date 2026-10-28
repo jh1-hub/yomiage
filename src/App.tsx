@@ -23,6 +23,7 @@ import { VoiceSettingsModal } from './components/VoiceSettingsModal';
 import { PronunciationDictionaryModal } from './components/PronunciationDictionaryModal';
 import { SavedTextsModal } from './components/SavedTextsModal';
 import { SampleTextModal } from './components/SampleTextModal';
+import { Edit3, BookOpen } from 'lucide-react';
 
 const DEFAULT_SETTINGS: VoiceSettings = {
   voiceURI: '',
@@ -75,6 +76,7 @@ export default function App() {
   });
 
   const [viewMode, setViewMode] = useState<ViewMode>('split');
+  const [mobileTab, setMobileTab] = useState<'editor' | 'reader'>('editor');
   const [fontSize, setFontSize] = useState<FontSize>('md');
 
   // --- Modal Visibility ---
@@ -105,7 +107,7 @@ export default function App() {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const pauseTimeoutRef = useRef<number | null>(null);
 
-  // Keep refs synchronized to avoid stale closures in Web Speech event callbacks
+  // Keep refs synchronized
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
@@ -232,7 +234,6 @@ export default function App() {
   const speakSentence = useCallback((index: number) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
 
-    // Clear any pending inter-sentence breath pause
     if (pauseTimeoutRef.current) {
       clearTimeout(pauseTimeoutRef.current);
       pauseTimeoutRef.current = null;
@@ -257,6 +258,9 @@ export default function App() {
     const utterance = new SpeechSynthesisUtterance(spokenText);
     utteranceRef.current = utterance;
 
+    // Explicitly enforce Japanese language tag so it never falls back to English TTS
+    utterance.lang = 'ja-JP';
+
     const currentSettings = settingsRef.current;
     utterance.rate = currentSettings.rate;
     utterance.pitch = currentSettings.pitch;
@@ -267,6 +271,7 @@ export default function App() {
       const matched = voicesRef.current.find(v => v.voiceURI === currentSettings.voiceURI);
       if (matched) {
         utterance.voice = matched;
+        utterance.lang = matched.lang || 'ja-JP';
       }
     }
 
@@ -303,7 +308,7 @@ export default function App() {
         return;
       }
 
-      // Natural breath pause between sentences (defaults to ~280ms)
+      // Natural breath pause between sentences
       const pauseMs = latestSettings.pauseDurationMs ?? 280;
       if (pauseMs > 0) {
         pauseTimeoutRef.current = window.setTimeout(() => {
@@ -335,6 +340,8 @@ export default function App() {
   // --- Control Handlers ---
   const handlePlay = () => {
     if (sentences.length === 0) return;
+    // On mobile, auto-switch to reader view so the user can see karaoke highlighting
+    setMobileTab('reader');
     speakSentence(currentSentenceIndex);
   };
 
@@ -425,12 +432,16 @@ export default function App() {
     }
     window.speechSynthesis.cancel();
     const testUtterance = new SpeechSynthesisUtterance('こんにちは。自然な読み上げのテスト中です。いかがでしょうか。');
+    testUtterance.lang = 'ja-JP';
     testUtterance.rate = rate;
     testUtterance.pitch = pitch;
     testUtterance.volume = volume;
     if (voiceURI) {
       const matched = voices.find(v => v.voiceURI === voiceURI);
-      if (matched) testUtterance.voice = matched;
+      if (matched) {
+        testUtterance.voice = matched;
+        testUtterance.lang = matched.lang || 'ja-JP';
+      }
     }
     window.speechSynthesis.speak(testUtterance);
   };
@@ -480,7 +491,7 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} antialiased font-sans`}>
+    <div className={`h-[100dvh] h-screen flex flex-col ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900'} antialiased font-sans overflow-hidden`}>
       {/* Top Bar Contract (1 row, 3 zones) */}
       <Header
         viewMode={viewMode}
@@ -498,11 +509,50 @@ export default function App() {
         hasContent={sentences.length > 0}
       />
 
-      {/* Main Workspace Canvas */}
-      <main className="flex-1 flex overflow-hidden relative">
+      {/* Mobile Screen Segmented Tab Switcher (< md) */}
+      <div className="md:hidden flex items-center justify-center p-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="flex items-center gap-1 w-full max-w-sm bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+          <button
+            type="button"
+            onClick={() => setMobileTab('editor')}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+              mobileTab === 'editor'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>テキスト編集</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('reader')}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+              mobileTab === 'reader'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>読み上げリーダー</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Main Workspace Canvas with Isolated Viewport Scrolling */}
+      <main className="flex-1 min-h-0 flex overflow-hidden relative">
         {/* Editor Pane */}
-        {(viewMode === 'split' || viewMode === 'editor') && (
-          <div className={`${viewMode === 'split' ? 'w-full md:w-1/2' : 'w-full'} h-full flex flex-col`}>
+        {((viewMode === 'split' && mobileTab === 'editor') ||
+          (viewMode === 'split' && typeof window !== 'undefined' && window.innerWidth >= 768) ||
+          viewMode === 'editor' ||
+          (viewMode === 'split' /* desktop fallback */)) && (
+          <div
+            className={`
+              ${viewMode === 'split' ? 'w-full md:w-1/2' : 'w-full'}
+              ${viewMode === 'split' && mobileTab !== 'editor' ? 'hidden md:flex' : 'flex'}
+              h-full flex-col min-h-0
+            `}
+          >
             <EditorView
               text={text}
               onChangeText={(newText) => {
@@ -519,8 +569,16 @@ export default function App() {
         )}
 
         {/* Reader Pane */}
-        {(viewMode === 'split' || viewMode === 'reader') && (
-          <div className={`${viewMode === 'split' ? 'hidden md:flex md:w-1/2' : 'w-full'} h-full flex flex-col bg-white dark:bg-slate-900/60`}>
+        {((viewMode === 'split' && mobileTab === 'reader') ||
+          (viewMode === 'split' && typeof window !== 'undefined' && window.innerWidth >= 768) ||
+          viewMode === 'reader') && (
+          <div
+            className={`
+              ${viewMode === 'split' ? 'w-full md:w-1/2' : 'w-full'}
+              ${viewMode === 'split' && mobileTab !== 'reader' ? 'hidden md:flex' : 'flex'}
+              h-full flex-col min-h-0 bg-white dark:bg-slate-900/60
+            `}
+          >
             <ReaderView
               sentences={sentences}
               currentSentenceIndex={currentSentenceIndex}
@@ -536,7 +594,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Primary Playback Deck */}
+      {/* Primary Playback Deck (Docked at bottom) */}
       <ControlsBar
         isPlaying={isPlaying}
         isPaused={isPaused}
