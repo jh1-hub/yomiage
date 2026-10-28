@@ -1,0 +1,6 @@
+{
+  "name": "KoeYomi (声読み)",
+  "description": "文字を自然な音声で読み上げる高機能テキストスピーチリーダー。文単位ハイライト、再生速度・声質調整、プリセット文章、読み替え辞書対応。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
