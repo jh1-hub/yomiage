@@ -338,11 +338,18 @@ export default function App() {
   }, []);
 
   // --- Control Handlers ---
+  const handleSpeakNow = () => {
+    const currentSentences = segmentText(text);
+    if (currentSentences.length === 0) return;
+    setSentences(currentSentences);
+    sentencesRef.current = currentSentences;
+    speakSentence(0);
+  };
+
   const handlePlay = () => {
     if (sentences.length === 0) return;
-    // On mobile, auto-switch to reader view so the user can see karaoke highlighting
-    setMobileTab('reader');
-    speakSentence(currentSentenceIndex);
+    const targetIdx = currentSentenceIndex >= sentences.length ? 0 : currentSentenceIndex;
+    speakSentence(targetIdx);
   };
 
   const handlePause = () => {
@@ -564,6 +571,9 @@ export default function App() {
               }}
               rate={settings.rate}
               onOpenSampleModal={() => setIsSampleModalOpen(true)}
+              onSpeakNow={handleSpeakNow}
+              onStop={handleStop}
+              isPlaying={isPlaying && !isPaused}
             />
           </div>
         )}
