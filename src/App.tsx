@@ -560,31 +560,31 @@ export default function App() {
       />
 
       {/* Mobile Screen Segmented Tab Switcher (< md) */}
-      <div className="md:hidden flex items-center justify-center p-1.5 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-1 w-full max-w-sm bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+      <div className="md:hidden flex items-center justify-center p-1 bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="flex items-center gap-1 w-full max-w-xs bg-white dark:bg-slate-800 p-0.5 rounded-md border border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setMobileTab('editor')}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+            className={`flex-1 py-1 text-xs font-semibold rounded flex items-center justify-center gap-1 transition-colors ${
               mobileTab === 'editor'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-2xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span>テキスト編集</span>
+            <Edit3 className="w-3 h-3" />
+            <span>編集</span>
           </button>
           <button
             type="button"
             onClick={() => setMobileTab('reader')}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-1.5 transition-colors ${
+            className={`flex-1 py-1 text-xs font-semibold rounded flex items-center justify-center gap-1 transition-colors ${
               mobileTab === 'reader'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-blue-600 text-white shadow-2xs'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>読み上げリーダー</span>
+            <BookOpen className="w-3 h-3" />
+            <span>リーダー</span>
           </button>
         </div>
       </div>

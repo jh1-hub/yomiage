@@ -4,17 +4,14 @@
  */
 
 import React, { useRef, useState, useEffect } from 'react';
-import { estimateReadingTime, naturalizeJapaneseText } from '../utils/speech';
+import { naturalizeJapaneseText } from '../utils/speech';
 import {
   Trash2,
-  Sparkles,
-  AlignLeft,
   Undo2,
   Wand2,
   Volume2,
   Square,
-  CornerDownLeft,
-  MessageSquare
+  CornerDownLeft
 } from 'lucide-react';
 
 interface EditorViewProps {
@@ -27,7 +24,7 @@ interface EditorViewProps {
   isPlaying: boolean;
 }
 
-// Quick conversation phrases (essential responses)
+// 5 Essential Quick Conversation Phrases
 const QUICK_PHRASES = [
   'はい',
   'いいえ',
@@ -39,7 +36,6 @@ const QUICK_PHRASES = [
 export const EditorView: React.FC<EditorViewProps> = ({
   text,
   onChangeText,
-  rate,
   onOpenSampleModal,
   onSpeakNow,
   onStop,
@@ -47,34 +43,22 @@ export const EditorView: React.FC<EditorViewProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Undo memory when cleared
   const [clearedTextBackup, setClearedTextBackup] = useState<string | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
 
-  // Instant conversation preferences (stored locally)
   const [speakOnEnter, setSpeakOnEnter] = useState<boolean>(() => {
     return localStorage.getItem('koeyomi_speak_on_enter') === 'true';
-  });
-  const [autoClearAfterSpeak, setAutoClearAfterSpeak] = useState<boolean>(() => {
-    return localStorage.getItem('koeyomi_auto_clear') === 'true';
   });
 
   useEffect(() => {
     localStorage.setItem('koeyomi_speak_on_enter', String(speakOnEnter));
   }, [speakOnEnter]);
 
-  useEffect(() => {
-    localStorage.setItem('koeyomi_auto_clear', String(autoClearAfterSpeak));
-  }, [autoClearAfterSpeak]);
-
   const showBriefToast = (msg: string) => {
     setShowToast(msg);
-    setTimeout(() => setShowToast(null), 2500);
+    setTimeout(() => setShowToast(null), 2000);
   };
 
-  /**
-   * Immediate 1-click Clear handler. Clears instantly and focuses cursor.
-   */
   const handleImmediateClear = () => {
     if (!text) {
       textareaRef.current?.focus();
@@ -107,24 +91,15 @@ export const EditorView: React.FC<EditorViewProps> = ({
       return;
     }
     onSpeakNow();
-
-    if (autoClearAfterSpeak) {
-      setTimeout(() => {
-        onChangeText('');
-        textareaRef.current?.focus();
-      }, 100);
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // If Ctrl+Enter or Cmd+Enter: always trigger instant speak
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       handleTriggerSpeak();
       return;
     }
 
-    // If Speak-on-Enter is active and not shifting: trigger speech
     if (speakOnEnter && e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleTriggerSpeak();
@@ -137,7 +112,7 @@ export const EditorView: React.FC<EditorViewProps> = ({
     setTimeout(() => {
       onSpeakNow();
       textareaRef.current?.focus();
-    }, 50);
+    }, 30);
   };
 
   const handleNaturalize = () => {
@@ -148,184 +123,136 @@ export const EditorView: React.FC<EditorViewProps> = ({
     textareaRef.current?.focus();
   };
 
-  const handleCleanWhitespace = () => {
-    if (!text) return;
-    const cleaned = text
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter((line, idx, arr) => !(line === '' && arr[idx - 1] === ''))
-      .join('\n');
-    onChangeText(cleaned);
-    showBriefToast('余白を整理しました');
-  };
-
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 relative select-none">
-      {/* Quick Phrase Strip (Especially useful for throat pain / cannot speak) */}
-      <div className="px-3.5 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-          <MessageSquare className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-          <span>ワンタップ即答（タップですぐ発声）:</span>
-        </div>
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-          {QUICK_PHRASES.map((phrase) => {
-            let buttonStyle = 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-blue-500';
-            if (phrase === 'はい') {
-              buttonStyle = 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 font-bold';
-            } else if (phrase === 'いいえ') {
-              buttonStyle = 'bg-rose-50/70 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100 font-bold';
-            }
-            return (
-              <button
-                key={phrase}
-                type="button"
-                onClick={() => handleQuickPhraseClick(phrase)}
-                className={`px-3 py-1.5 text-xs rounded-lg border whitespace-nowrap shrink-0 transition-all shadow-2xs active:scale-95 ${buttonStyle}`}
-              >
-                {phrase}
-              </button>
-            );
-          })}
-        </div>
+    <div className="h-full flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 relative select-none min-h-0">
+      {/* Ultra-compact Quick Phrase Strip */}
+      <div className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shrink-0 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        {QUICK_PHRASES.map((phrase) => {
+          let buttonStyle = 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-blue-500';
+          if (phrase === 'はい') {
+            buttonStyle = 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold';
+          } else if (phrase === 'いいえ') {
+            buttonStyle = 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 font-bold';
+          }
+          return (
+            <button
+              key={phrase}
+              type="button"
+              onClick={() => handleQuickPhraseClick(phrase)}
+              className={`px-2.5 py-1 text-xs rounded-md border whitespace-nowrap shrink-0 transition-all shadow-2xs active:scale-95 ${buttonStyle}`}
+            >
+              {phrase}
+            </button>
+          );
+        })}
       </div>
 
       {/* Floating Feedback Toast */}
       {showToast && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 bg-slate-900/95 text-white text-xs font-medium rounded-full shadow-lg pointer-events-none transition-all animate-in fade-in">
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-30 px-3 py-1 bg-slate-900/95 text-white text-xs font-medium rounded-full shadow-md pointer-events-none transition-all">
           {showToast}
         </div>
       )}
 
-      {/* Large Input Area (Optimized for quick typing and instant reading) */}
-      <div className="flex-1 min-h-0 relative p-4 md:p-6 bg-white dark:bg-slate-900 flex flex-col">
+      {/* Spacious Input Area (Maximizes height even at 640x480) */}
+      <div className="flex-1 min-h-0 relative p-3 sm:p-4 bg-white dark:bg-slate-900 flex flex-col">
         <textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => onChangeText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="言いたいことをここに入力してください...&#10;&#10;・下の特大「読み上げる」ボタンまたは [Enter] キーで即座に声が出ます。&#10;・消去ボタンで一瞬で消して次の返答を打てます。"
-          className="w-full flex-1 resize-none bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-lg md:text-2xl font-medium leading-relaxed focus:outline-hidden"
+          placeholder="言いたいことを入力..."
+          className="w-full flex-1 resize-none bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-base sm:text-xl font-medium leading-relaxed focus:outline-hidden"
           spellCheck={false}
           autoFocus
         />
 
-        {/* Text Utility Mini-Toolbar */}
-        <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-400">
+        {/* Minimal inline status line */}
+        <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/60 text-[11px] text-slate-400 shrink-0">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handleNaturalize}
               disabled={!text}
-              className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30"
-              title="読点などを整えてより自然に"
+              className="flex items-center gap-1 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30"
+              title="読点を補正"
             >
               <Wand2 className="w-3 h-3" />
-              <span>自然な読みに整形</span>
+              <span>整形</span>
             </button>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
-            <button
-              type="button"
-              onClick={handleCleanWhitespace}
-              disabled={!text}
-              className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-30"
-            >
-              <AlignLeft className="w-3 h-3" />
-              <span>余白整理</span>
-            </button>
-            <span className="text-slate-300 dark:text-slate-700">·</span>
+            <span>·</span>
             <button
               type="button"
               onClick={onOpenSampleModal}
-              className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              className="hover:text-slate-700 dark:hover:text-slate-200"
             >
-              <Sparkles className="w-3 h-3" />
-              <span>名作サンプル</span>
+              サンプル文
             </button>
           </div>
-
-          <div className="text-[11px] font-mono">
-            {text.replace(/\s+/g, '').length} 文字
-          </div>
+          <span className="font-mono">{text.replace(/\s+/g, '').length}字</span>
         </div>
       </div>
 
-      {/* Massive Speak & Immediate Action Deck */}
-      <div className="p-3.5 md:p-4 bg-slate-50/90 dark:bg-slate-900/90 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-2.5">
-        {/* Toggle options for ultra-fast conversation */}
-        <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 px-1 flex-wrap gap-2">
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={speakOnEnter}
-              onChange={(e) => setSpeakOnEnter(e.target.checked)}
-              className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span className="flex items-center gap-1 font-medium">
-              <CornerDownLeft className="w-3 h-3" />
-              <span>Enterキーで即座に読み上げ</span>
-            </span>
-          </label>
-
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoClearAfterSpeak}
-              onChange={(e) => setAutoClearAfterSpeak(e.target.checked)}
-              className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500"
-            />
-            <span>読み上げたら自動で消去（次の文へ）</span>
-          </label>
-        </div>
-
-        {/* HUGE Buttons Grid */}
-        <div className="flex items-stretch gap-2.5">
-          {/* Prominent Large Speak Button */}
+      {/* Compact Action Bar (Minimal labels, space-saving) */}
+      <div className="px-2.5 py-2 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Main Speak button (Minimal, crisp label) */}
           {isPlaying ? (
             <button
               type="button"
               onClick={onStop}
-              className="flex-1 h-14 md:h-16 flex items-center justify-center gap-2.5 px-6 rounded-xl font-bold text-base md:text-lg text-white bg-slate-800 hover:bg-slate-900 active:scale-98 shadow-md transition-all cursor-pointer"
+              className="h-10 md:h-11 flex-1 flex items-center justify-center gap-2 px-4 rounded-lg font-bold text-sm text-white bg-slate-800 hover:bg-slate-900 active:scale-98 shadow-xs transition-all cursor-pointer"
             >
-              <Square className="w-6 h-6 fill-current text-red-400" />
-              <span>停止する</span>
+              <Square className="w-4 h-4 fill-current text-red-400" />
+              <span>停止</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={handleTriggerSpeak}
               disabled={!text.trim()}
-              className="flex-1 h-14 md:h-16 flex items-center justify-center gap-3 px-6 rounded-xl font-bold text-lg md:text-xl text-white bg-blue-600 hover:bg-blue-700 active:scale-98 disabled:opacity-40 disabled:hover:bg-blue-600 shadow-md hover:shadow-lg transition-all cursor-pointer"
+              className="h-10 md:h-11 flex-1 flex items-center justify-center gap-2 px-4 rounded-lg font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 active:scale-98 disabled:opacity-35 disabled:hover:bg-blue-600 shadow-xs transition-all cursor-pointer"
             >
-              <Volume2 className="w-7 h-7 stroke-[2.2]" />
-              <span>声で伝える（読み上げ）</span>
+              <Volume2 className="w-4 h-4 stroke-[2.4]" />
+              <span>読み上げ</span>
             </button>
           )}
 
-          {/* Large Clear Button */}
+          {/* Quick Clear button */}
           <button
             type="button"
             onClick={handleImmediateClear}
             disabled={!text}
-            className="h-14 md:h-16 px-5 md:px-7 flex items-center justify-center gap-2 rounded-xl font-semibold text-sm md:text-base text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-900/60 disabled:opacity-30 transition-all cursor-pointer shrink-0"
-            title="1クリックで即座に消去して次の文字を打つ"
+            className="h-10 md:h-11 px-3.5 flex items-center justify-center gap-1.5 rounded-lg font-medium text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 border border-red-200 dark:border-red-900/60 disabled:opacity-30 transition-all cursor-pointer shrink-0"
+            title="消去"
           >
-            <Trash2 className="w-5 h-5" />
-            <span className="hidden sm:inline">消去</span>
+            <Trash2 className="w-4 h-4" />
+            <span>消去</span>
           </button>
 
-          {/* Quick Undo if cleared */}
           {clearedTextBackup && (
             <button
               type="button"
               onClick={handleUndoClear}
-              className="h-14 md:h-16 px-4 flex items-center justify-center gap-1.5 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 hover:bg-amber-100 transition-all cursor-pointer shrink-0"
-              title="消去したテキストを戻す"
+              className="h-10 md:h-11 px-2.5 flex items-center justify-center rounded-lg text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 hover:bg-amber-100 transition-all shrink-0"
+              title="元に戻す"
             >
-              <Undo2 className="w-4 h-4" />
-              <span className="hidden sm:inline">復元</span>
+              <Undo2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
+
+        {/* Enter key shortcut toggle */}
+        <label className="flex items-center gap-1 cursor-pointer text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap shrink-0 pr-1">
+          <input
+            type="checkbox"
+            checked={speakOnEnter}
+            onChange={(e) => setSpeakOnEnter(e.target.checked)}
+            className="w-3 h-3 text-blue-600 rounded focus:ring-blue-500"
+          />
+          <CornerDownLeft className="w-3 h-3 text-slate-400" />
+          <span className="hidden sm:inline">Enterで発声</span>
+        </label>
       </div>
     </div>
   );

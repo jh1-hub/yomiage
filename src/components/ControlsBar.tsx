@@ -98,17 +98,19 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
 
   return (
     <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0 select-none shadow-lg">
-      {/* Audio Visualizer Strip */}
-      <AudioVisualizer
-        isPlaying={isPlaying && !isPaused}
-        rate={settings.rate}
-        pitch={settings.pitch}
-        theme={theme}
-      />
+      {/* Audio Visualizer Strip (Hidden on small vertical heights to maximize typing area) */}
+      <div className="hidden sm:block">
+        <AudioVisualizer
+          isPlaying={isPlaying && !isPaused}
+          rate={settings.rate}
+          pitch={settings.pitch}
+          theme={theme}
+        />
+      </div>
 
       {/* Progress Scrubber Bar */}
-      <div className="px-6 pt-1 pb-2">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1 font-mono tabular-nums">
+      <div className="px-3 md:px-6 pt-1 pb-1">
+        <div className="flex items-center justify-between text-[10px] md:text-[11px] text-slate-500 dark:text-slate-400 mb-0.5 font-mono tabular-nums">
           <span>
             {hasContent
               ? `第 ${currentSentenceIndex + 1} / ${totalSentences} 文`
@@ -129,13 +131,13 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
             value={currentSentenceIndex}
             onChange={(e) => onSeekSentence(parseInt(e.target.value, 10))}
             disabled={!hasContent}
-            className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-400 disabled:opacity-40"
+            className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:accent-blue-400 disabled:opacity-40"
           />
         </div>
       </div>
 
       {/* Primary Control Buttons Strip */}
-      <div className="px-6 pb-4 pt-1 flex flex-wrap items-center justify-between gap-4">
+      <div className="px-3 md:px-6 pb-2 pt-0.5 flex flex-wrap items-center justify-between gap-2 md:gap-4">
         {/* Left Side: Repeat mode, Sleep timer */}
         <div className="flex items-center gap-2">
           {/* Repeat Mode */}
@@ -220,20 +222,20 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
             <button
               type="button"
               onClick={onPause}
-              className="p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
+              className="p-2.5 md:p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95"
               title="一時停止"
             >
-              <Pause className="w-6 h-6 fill-current" />
+              <Pause className="w-5 h-5 fill-current" />
             </button>
           ) : (
             <button
               type="button"
               onClick={isPaused ? onResume : onPlay}
               disabled={!hasContent}
-              className="p-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:hover:bg-blue-600"
+              className="p-2.5 md:p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:hover:bg-blue-600"
               title={isPaused ? '再開' : '読み上げ開始'}
             >
-              <Play className="w-6 h-6 fill-current ml-0.5" />
+              <Play className="w-5 h-5 fill-current ml-0.5" />
             </button>
           )}
 
